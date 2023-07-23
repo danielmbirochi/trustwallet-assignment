@@ -14,7 +14,7 @@ type KeyValueStorer interface {
 	// Put inserts the given value into the key-value store. It expect a
 	// slice of slice of byte to enable adding multiple items to the key-value
 	// list. To add just one item to the value list just pass one item into the
-	// slice - []byte{item}. It will return an error if datastore is not initialized.
+	// slice - [][]byte{item}. It will return an error if datastore is not initialized.
 	Put(key string, value [][]byte) error
 
 	// Delete removes the given key from the key-value store. It will return

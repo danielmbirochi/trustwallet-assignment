@@ -53,14 +53,14 @@ func (db *Database) Get(key string) ([][]byte, error) {
 }
 
 // Put inserts the given value into the key-value store.
-func (db *Database) Put(key string, value []byte) error {
+func (db *Database) Put(key string, value [][]byte) error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
 
 	if db.db == nil {
 		return ErrInMemoryDBNotFound
 	}
-	db.db[key] = append(db.db[key], value)
+	db.db[key] = append(db.db[key], value...)
 	return nil
 }
 
