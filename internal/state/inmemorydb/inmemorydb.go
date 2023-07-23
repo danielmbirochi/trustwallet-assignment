@@ -75,3 +75,12 @@ func (db *Database) Delete(key string) error {
 	delete(db.db, key)
 	return nil
 }
+
+// Close deallocates the internal map and ensures any consecutive data access op
+// fails with an error.
+func (db *Database) Close() {
+	db.lock.Lock()
+	defer db.lock.Unlock()
+
+	db.db = nil
+}
