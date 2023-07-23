@@ -75,11 +75,3 @@ func (db *Database) Delete(key string) error {
 	delete(db.db, key)
 	return nil
 }
-
-// Len returns the number of entries currently present in the memory database.
-func (db *Database) Len() int {
-	db.lock.RLock()
-	defer db.lock.RUnlock()
-
-	return len(db.db)
-}
