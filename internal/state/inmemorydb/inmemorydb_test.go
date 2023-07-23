@@ -57,6 +57,25 @@ func TestInMemoryDB(t *testing.T) {
 
 		{
 			testID := 3
+			persisted, err := db.Get(key)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able query an entry in the key-value store : %s", Failed, testID, err)
+			}
+
+			persisted[0] = []byte("mutated")
+
+			got, err := db.Get(key)
+			if err != nil {
+				t.Fatalf("\t%s\tTest %d:\tShould be able query an entry in the key-value store : %s", Failed, testID, err)
+			}
+			if bytes.Equal(got[0], persisted[0]) {
+				t.Fatalf("\t%s\tTest %d:\tShould be protect internal storage from outside mutations", Failed, testID)
+			}
+			t.Logf("\t%s\tTest %d:\tShould be protect internal storage from outside mutations", Success, testID)
+		}
+
+		{
+			testID := 4
 			if err := db.Delete(key); err != nil {
 				t.Fatalf("\t%s\tTest %d:\tShould be able to delete an entry in the key-value store : %s", Failed, testID, err)
 			}
