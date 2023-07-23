@@ -3,6 +3,8 @@ package txparser
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"strings"
 
 	svc "github.com/danielmbirochi/trustwallet-assignment/internal/service"
 	"github.com/danielmbirochi/trustwallet-assignment/internal/state"
@@ -27,15 +29,15 @@ func NewScan(kvstate state.KeyValueStorer, clt *ethclient.Client, startAt int) B
 // type service.Transaction.
 func ParseTx(tx ethclient.Transaction) svc.Transaction {
 	return svc.Transaction{
-		ChainID:     tx.ChainID,
-		BlockNumber: tx.BlockNumber,
+		ChainID:     decodeHexString(tx.ChainID),
+		BlockNumber: decodeHexString(tx.BlockNumber),
 		Hash:        tx.Hash,
-		Nonce:       tx.Nonce,
+		Nonce:       decodeHexString(tx.Nonce),
 		From:        tx.From,
 		To:          tx.To,
-		Value:       tx.Value,
-		Gas:         tx.Gas,
-		GasPrice:    tx.GasPrice,
+		Value:       decodeHexString(tx.Value),
+		Gas:         decodeHexString(tx.Gas),
+		GasPrice:    decodeHexString(tx.GasPrice),
 		Input:       tx.Input,
 	}
 }
@@ -90,7 +92,7 @@ func (b *Blockscan) ScanBlock(blockNumber int) (map[string][]svc.Transaction, er
 	return newTxs, nil
 }
 
-// Pull retrieves incoming/outgoing transactions for the given list
+// Pull retrieves ingoing/outgoing transactions for the given list
 // of address. This method does not check for internal transactions
 // from smart contract executions.
 func (b *Blockscan) Pull(txs []svc.Transaction) map[string][]svc.Transaction {
@@ -151,4 +153,12 @@ func parseTxs(txs []ethclient.Transaction) []svc.Transaction {
 		transactions[i] = ParseTx(v)
 	}
 	return transactions
+}
+
+func decodeHexString(hexStr string) *big.Int {
+	hexStr = strings.TrimPrefix(hexStr, "0x")
+
+	n := new(big.Int)
+	n.SetString(hexStr, 16)
+	return n
 }
