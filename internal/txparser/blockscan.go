@@ -90,7 +90,7 @@ func (b *Blockscan) ScanBlock(blockNumber int) (map[string][]svc.Transaction, er
 	return newTxs, nil
 }
 
-// Pull retrieves ingoing/outgoing transactions for the given list
+// Pull retrieves incoming/outgoing transactions for the given list
 // of address. This method does not check for internal transactions
 // from smart contract executions.
 func (b *Blockscan) Pull(txs []svc.Transaction) map[string][]svc.Transaction {
