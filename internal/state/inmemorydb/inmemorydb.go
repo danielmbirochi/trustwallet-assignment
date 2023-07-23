@@ -1,4 +1,4 @@
-// Package inmemorydb implements a key-value in memory db.
+// Package inmemorydb implements the key-value db.
 package inmemorydb
 
 import (
@@ -47,7 +47,9 @@ func (db *Database) Get(key string) ([][]byte, error) {
 		return nil, ErrInMemoryDBNotFound
 	}
 	if entry, ok := db.db[key]; ok {
-		return entry, nil
+		result := make([][]byte, len(entry))
+		copy(result, entry)
+		return result, nil
 	}
 	return nil, ErrInMemoryDBNotFound
 }
