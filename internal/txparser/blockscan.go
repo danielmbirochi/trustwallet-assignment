@@ -31,8 +31,9 @@ type Blockscan struct {
 	running          bool
 }
 
-func NewScan(kvstate state.KeyValueStorer, clt *ethclient.Client, startAt int) Blockscan {
+func NewScan(ctx context.Context, kvstate state.KeyValueStorer, clt *ethclient.Client, startAt int) Blockscan {
 	return Blockscan{
+		ctx:              ctx,
 		kvstate:          kvstate,
 		clt:              clt,
 		lastScannedBlock: startAt,

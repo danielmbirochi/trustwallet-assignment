@@ -1,10 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"time"
 
-	svc "github.com/danielmbirochi/trustwallet-assignment/internal/service"
 	"github.com/danielmbirochi/trustwallet-assignment/internal/txparser"
 )
 
@@ -13,15 +14,24 @@ const (
 	InitialBlock = 0
 )
 
-func run(service svc.Parser) error {
+var (
+	ScanInterval = time.Second * 10
+)
+
+func run() error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	service := txparser.New(ctx, Endpoint, InitialBlock)
+	if !service.StartScan(ScanInterval) {
+		return fmt.Errorf("error starting scan")
+	}
+
 	return nil
 }
 
 func main() {
-
-	service := txparser.New(Endpoint, InitialBlock)
-
-	if err := run(service); err != nil {
+	if err := run(); err != nil {
 		fmt.Println("error: ", err)
 		os.Exit(1)
 	}

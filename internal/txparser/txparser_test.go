@@ -1,6 +1,7 @@
 package txparser_test
 
 import (
+	"context"
 	"testing"
 
 	svc "github.com/danielmbirochi/trustwallet-assignment/internal/service"
@@ -24,7 +25,7 @@ func TestTxParserService(t *testing.T) {
 	ethclt := ethclient.New(Endpoint)
 	dataset := makeSampleDataset(t, ethclt, InitialBlock, InitialBlock+30)
 
-	service := txparser.New(Endpoint, InitialBlock)
+	service := txparser.New(context.Background(), Endpoint, InitialBlock)
 
 	t.Run("GetCurrentBlock", func(t *testing.T) {
 		testID := 0

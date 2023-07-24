@@ -1,6 +1,7 @@
 package txparser
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -15,10 +16,10 @@ type Service struct {
 	Blockscan
 }
 
-func New(endpoint string, startAtBlock int) *Service {
+func New(ctx context.Context, endpoint string, startAtBlock int) *Service {
 	datastore := db.New()
 	ethclt := ethclient.New(endpoint)
-	scan := NewScan(datastore, ethclt, startAtBlock)
+	scan := NewScan(ctx, datastore, ethclt, startAtBlock)
 	return &Service{
 		kvstate:   datastore,
 		Blockscan: scan,
@@ -37,6 +38,7 @@ func (s *Service) GetTransactions(address string) []svc.Transaction {
 	txs, err := s.kvstate.Get(address)
 	if err != nil {
 		fmt.Printf("error getting transactions: %v", err)
+		return nil
 	}
 	transactions := make([]svc.Transaction, len(txs))
 	for i, v := range txs {
