@@ -63,12 +63,23 @@ func (db *Database) Put(key string, value [][]byte) error {
 		return ErrInMemoryDBNotFound
 	}
 
-	if _, exist := db.db[key]; exist {
-		return nil
-	}
-
 	db.db[key] = append(db.db[key], value...)
 	return nil
+}
+
+func (db *Database) List() ([]string, error) {
+	db.lock.RLock()
+	defer db.lock.RUnlock()
+
+	if db.db == nil {
+		return nil, ErrInMemoryDBNotFound
+	}
+
+	var result []string
+	for k := range db.db {
+		result = append(result, k)
+	}
+	return result, nil
 }
 
 // Delete removes the key from the key-value store.

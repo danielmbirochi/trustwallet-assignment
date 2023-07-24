@@ -17,6 +17,10 @@ type KeyValueStorer interface {
 	// slice - [][]byte{item}. It will return an error if datastore is not initialized.
 	Put(key string, value [][]byte) error
 
+	// List retrieves all the keys present in the key-value store. It will
+	// return an error if datastore is not initialized.
+	List() ([]string, error)
+
 	// Delete removes the given key from the key-value store. It will return
 	// an error if datastore is not initialized.
 	Delete(key string) error
