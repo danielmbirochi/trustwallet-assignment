@@ -32,7 +32,25 @@ type Blockscan struct {
 	once             sync.Once
 }
 
+// ParseTx converts an ethclient.Transaction into a the domain
+// type service.Transaction.
+func ParseTx(tx ethclient.Transaction) svc.Transaction {
+	return svc.Transaction{
+		ChainID:     decodeHexString(tx.ChainID),
+		BlockNumber: decodeHexString(tx.BlockNumber),
+		Hash:        tx.Hash,
+		Nonce:       decodeHexString(tx.Nonce),
+		From:        tx.From,
+		To:          tx.To,
+		Value:       decodeHexString(tx.Value),
+		Gas:         decodeHexString(tx.Gas),
+		GasPrice:    decodeHexString(tx.GasPrice),
+		Input:       tx.Input,
+	}
+}
+
 func NewScan(ctx context.Context, kvstate state.KeyValueStorer, clt *ethclient.Client, startAt int) *Blockscan {
+	fmt.Println("Blockscan set to start at block: ", startAt)
 	return &Blockscan{
 		ctx:              ctx,
 		kvstate:          kvstate,
@@ -64,28 +82,11 @@ func (b *Blockscan) StartScan(interval time.Duration) {
 						}
 					}
 					ticker.Reset(interval)
-					fmt.Printf("scanned block %d\n", b.GetCurrentBlock())
+					fmt.Printf("last scanned block %d\n", b.GetCurrentBlock())
 				}
 			}
 		}()
 	})
-}
-
-// ParseTx converts an ethclient.Transaction into a the domain
-// type service.Transaction.
-func ParseTx(tx ethclient.Transaction) svc.Transaction {
-	return svc.Transaction{
-		ChainID:     decodeHexString(tx.ChainID),
-		BlockNumber: decodeHexString(tx.BlockNumber),
-		Hash:        tx.Hash,
-		Nonce:       decodeHexString(tx.Nonce),
-		From:        tx.From,
-		To:          tx.To,
-		Value:       decodeHexString(tx.Value),
-		Gas:         decodeHexString(tx.Gas),
-		GasPrice:    decodeHexString(tx.GasPrice),
-		Input:       tx.Input,
-	}
 }
 
 // GetCurrentBlock returns the last scanned block.
@@ -157,6 +158,7 @@ func (b *Blockscan) Pull(txs []svc.Transaction) map[string][]svc.Transaction {
 // saveTxs saves the given transactions into the key value store.
 func (b *Blockscan) SaveTxs(newTxs map[string][]svc.Transaction) {
 	for address, txs := range newTxs {
+		fmt.Printf("Saving txs for address: %s\nTxs: %+v\n", address, txs)
 		if err := b.kvstate.Put(address, encodeTxBatch(txs)); err != nil {
 			fmt.Printf("error saving transactions: %v", err)
 			continue
