@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	svc "github.com/danielmbirochi/trustwallet-assignment/internal"
 	"github.com/danielmbirochi/trustwallet-assignment/internal/state"
@@ -30,8 +31,8 @@ func New(ctx context.Context, endpoint string, startAtBlock int) *Service {
 // for transactions. Returns true if the address was added successfully.
 // It will return true if the address is already subscribed.
 func (s *Service) Subscribe(address string) bool {
-	if err := s.kvstate.Put(address, [][]byte{}); err != nil {
-		fmt.Printf("error subscribing address: %v", err)
+	if err := s.kvstate.Put(strings.ToLower(address), [][]byte{}); err != nil {
+		fmt.Println("error subscribing address: ", err)
 		return false
 	}
 	return true
@@ -39,16 +40,16 @@ func (s *Service) Subscribe(address string) bool {
 
 // GetTransactions return a list of scanned transactions for the given address.
 func (s *Service) GetTransactions(address string) []svc.Transaction {
-	txs, err := s.kvstate.Get(address)
+	txs, err := s.kvstate.Get(strings.ToLower(address))
 	if err != nil {
-		fmt.Printf("error getting transactions: %v", err)
+		fmt.Println("error getting transactions: ", err)
 		return nil
 	}
 	transactions := make([]svc.Transaction, len(txs))
 	for i, v := range txs {
 		var tx svc.Transaction
 		if err := json.Unmarshal(v, &tx); err != nil {
-			fmt.Printf("error unmarshaling transaction: %v", err)
+			fmt.Println("error unmarshaling transaction: ", err)
 			continue
 		}
 		transactions[i] = tx

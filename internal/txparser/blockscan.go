@@ -158,9 +158,8 @@ func (b *Blockscan) Pull(txs []svc.Transaction) map[string][]svc.Transaction {
 // saveTxs saves the given transactions into the key value store.
 func (b *Blockscan) SaveTxs(newTxs map[string][]svc.Transaction) {
 	for address, txs := range newTxs {
-		fmt.Printf("Saving txs for address: %s\nTxs: %+v\n", address, txs)
 		if err := b.kvstate.Put(address, encodeTxBatch(txs)); err != nil {
-			fmt.Printf("error saving transactions: %v", err)
+			fmt.Println("error saving transactions: ", err)
 			continue
 		}
 	}
@@ -171,7 +170,7 @@ func encodeTxBatch(batch []svc.Transaction) [][]byte {
 	for _, v := range batch {
 		tx, err := json.Marshal(v)
 		if err != nil {
-			fmt.Printf("error marshaling transaction: %v", err)
+			fmt.Println("error marshaling transaction: ", err)
 			continue
 		}
 		txs = append(txs, tx)
