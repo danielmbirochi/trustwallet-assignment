@@ -1,10 +1,10 @@
 package txparser
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"os"
 	"strings"
 	"time"
 
@@ -24,9 +24,11 @@ type Scanner interface {
 }
 
 type Blockscan struct {
+	ctx              context.Context
 	kvstate          state.KeyValueStorer
 	clt              *ethclient.Client
 	lastScannedBlock int
+	running          bool
 }
 
 func NewScan(kvstate state.KeyValueStorer, clt *ethclient.Client, startAt int) Blockscan {
@@ -39,29 +41,35 @@ func NewScan(kvstate state.KeyValueStorer, clt *ethclient.Client, startAt int) B
 
 // StartScan spawn a goroutine that will run the block scanning process
 // at the given interval. It will stop the process when a signal is received
-// on the shutdown channel.
-func StartScan(shutdown chan os.Signal, scan Scanner, interval time.Duration) {
+// on the shutdown channel. It will return true if the process was started
+// successfully. It will return false if the process is already running.
+func (b *Blockscan) StartScan(interval time.Duration) bool {
+	if b.running {
+		return false
+	}
+	b.running = true
 	go func() {
 		ticker := time.NewTicker(interval)
 		for {
 			select {
-			case <-shutdown:
+			case <-b.ctx.Done():
 				ticker.Stop()
 				fmt.Println("Stopping blockscan")
 				return
 			case <-ticker.C:
 				ticker.Stop()
-				for scannedBlock, err := scan.Run(); scannedBlock != 0 || err != nil; scannedBlock, err = scan.Run() {
+				for scannedBlock, err := b.Run(); scannedBlock != 0 || err != nil; scannedBlock, err = b.Run() {
 					if err != nil {
 						fmt.Println(fmt.Errorf("error scanning block: %s", err))
-						break
+						continue
 					}
 				}
 				ticker.Reset(interval)
-				fmt.Printf("Scanned block %d\n", scan.GetCurrentBlock())
+				fmt.Printf("Scanned block %d\n", b.GetCurrentBlock())
 			}
 		}
 	}()
+	return true
 }
 
 // ParseTx converts an ethclient.Transaction into a the domain
