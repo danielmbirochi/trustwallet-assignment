@@ -13,7 +13,7 @@ import (
 
 type Service struct {
 	kvstate state.KeyValueStorer
-	Blockscan
+	*Blockscan
 }
 
 func New(ctx context.Context, endpoint string, startAtBlock int) *Service {

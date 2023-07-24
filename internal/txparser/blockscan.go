@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"sync"
 	"time"
 
-	svc "github.com/danielmbirochi/trustwallet-assignment/internal/service"
+	svc "github.com/danielmbirochi/trustwallet-assignment/internal/core"
 	"github.com/danielmbirochi/trustwallet-assignment/internal/state"
 	"github.com/danielmbirochi/trustwallet-assignment/pkg/ethclient"
 )
@@ -28,11 +29,11 @@ type Blockscan struct {
 	kvstate          state.KeyValueStorer
 	clt              *ethclient.Client
 	lastScannedBlock int
-	running          bool
+	once             sync.Once
 }
 
-func NewScan(ctx context.Context, kvstate state.KeyValueStorer, clt *ethclient.Client, startAt int) Blockscan {
-	return Blockscan{
+func NewScan(ctx context.Context, kvstate state.KeyValueStorer, clt *ethclient.Client, startAt int) *Blockscan {
+	return &Blockscan{
 		ctx:              ctx,
 		kvstate:          kvstate,
 		clt:              clt,
@@ -42,35 +43,32 @@ func NewScan(ctx context.Context, kvstate state.KeyValueStorer, clt *ethclient.C
 
 // StartScan spawn a goroutine that will run the block scanning process
 // at the given interval. It will stop the process when a signal is received
-// on the shutdown channel. It will return true if the process was started
-// successfully. It will return false if the process is already running.
-func (b *Blockscan) StartScan(interval time.Duration) bool {
-	if b.running {
-		return false
-	}
-	b.running = true
-	go func() {
-		ticker := time.NewTicker(interval)
-		for {
-			select {
-			case <-b.ctx.Done():
-				ticker.Stop()
-				fmt.Println("stopping blockscan")
-				return
-			case <-ticker.C:
-				ticker.Stop()
-				for scannedBlock, err := b.Run(); scannedBlock != 0 || err != nil; scannedBlock, err = b.Run() {
-					if err != nil {
-						fmt.Println(fmt.Errorf("error scanning block: %s", err))
-						continue
+// on the shutdown channel. It will spawn only one goroutine for each Blockscan
+// instance.
+func (b *Blockscan) StartScan(interval time.Duration) {
+	b.once.Do(func() {
+		go func() {
+			ticker := time.NewTicker(interval)
+			for {
+				select {
+				case <-b.ctx.Done():
+					ticker.Stop()
+					fmt.Println("stopping blockscan")
+					return
+				case <-ticker.C:
+					ticker.Stop()
+					for scannedBlock, err := b.Run(); scannedBlock != 0 || err != nil; scannedBlock, err = b.Run() {
+						if err != nil {
+							fmt.Println(fmt.Errorf("error scanning block: %s", err))
+							continue
+						}
 					}
+					ticker.Reset(interval)
+					fmt.Printf("scanned block %d\n", b.GetCurrentBlock())
 				}
-				ticker.Reset(interval)
-				fmt.Printf("scanned block %d\n", b.GetCurrentBlock())
 			}
-		}
-	}()
-	return true
+		}()
+	})
 }
 
 // ParseTx converts an ethclient.Transaction into a the domain

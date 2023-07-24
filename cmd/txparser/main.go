@@ -25,9 +25,7 @@ func run() error {
 	defer cancel()
 
 	service := txparser.New(ctx, Endpoint, InitialBlock)
-	if !service.StartScan(ScanInterval) {
-		return fmt.Errorf("error starting scan")
-	}
+	service.StartScan(ScanInterval)
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
