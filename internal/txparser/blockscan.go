@@ -4,12 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"os"
 	"strings"
+	"time"
 
 	svc "github.com/danielmbirochi/trustwallet-assignment/internal/service"
 	"github.com/danielmbirochi/trustwallet-assignment/internal/state"
 	"github.com/danielmbirochi/trustwallet-assignment/pkg/ethclient"
 )
+
+type Scanner interface {
+	// Run starts the block scanning process. It will return the number
+	// of the last scanned block and an error if any. In case of no pending
+	// blocks to be scanned it will return 0.
+	Run() (int, error)
+
+	// GetCurrentBlock returns the last scanned block.
+	GetCurrentBlock() int
+}
 
 type Blockscan struct {
 	kvstate          state.KeyValueStorer
@@ -23,6 +35,33 @@ func NewScan(kvstate state.KeyValueStorer, clt *ethclient.Client, startAt int) B
 		clt:              clt,
 		lastScannedBlock: startAt,
 	}
+}
+
+// StartScan spawn a goroutine that will run the block scanning process
+// at the given interval. It will stop the process when a signal is received
+// on the shutdown channel.
+func StartScan(shutdown chan os.Signal, scan Scanner, interval time.Duration) {
+	go func() {
+		ticker := time.NewTicker(interval)
+		for {
+			select {
+			case <-shutdown:
+				ticker.Stop()
+				fmt.Println("Stopping blockscan")
+				return
+			case <-ticker.C:
+				ticker.Stop()
+				for scannedBlock, err := scan.Run(); scannedBlock != 0 || err != nil; scannedBlock, err = scan.Run() {
+					if err != nil {
+						fmt.Println(fmt.Errorf("error scanning block: %s", err))
+						break
+					}
+				}
+				ticker.Reset(interval)
+				fmt.Printf("Scanned block %d\n", scan.GetCurrentBlock())
+			}
+		}
+	}()
 }
 
 // ParseTx converts an ethclient.Transaction into a the domain
@@ -68,7 +107,7 @@ func (b *Blockscan) Run() (int, error) {
 		return 0, err
 	}
 
-	b.saveTxs(txs)
+	b.SaveTxs(txs)
 	b.lastScannedBlock = nextBlock
 
 	return b.lastScannedBlock, nil
@@ -109,7 +148,7 @@ func (b *Blockscan) Pull(txs []svc.Transaction) map[string][]svc.Transaction {
 }
 
 // saveTxs saves the given transactions into the key value store.
-func (b *Blockscan) saveTxs(newTxs map[string][]svc.Transaction) {
+func (b *Blockscan) SaveTxs(newTxs map[string][]svc.Transaction) {
 	for address, txs := range newTxs {
 		if err := b.kvstate.Put(address, encodeTxBatch(txs)); err != nil {
 			fmt.Printf("error saving transactions: %v", err)
