@@ -63,11 +63,7 @@ func (db *Database) Put(key string, value [][]byte) error {
 		return ErrInMemoryDBNotFound
 	}
 
-	exist, err := db.Has(key)
-	if err != nil {
-		return err
-	}
-	if exist {
+	if _, exist := db.db[key]; exist {
 		return nil
 	}
 
