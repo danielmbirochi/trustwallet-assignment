@@ -26,6 +26,9 @@ func New(ctx context.Context, endpoint string, startAtBlock int) *Service {
 	}
 }
 
+// Subscribe adds the address to the list of addresses to be scanned
+// for transactions. Returns true if the address was added successfully.
+// It will return true if the address is already subscribed.
 func (s *Service) Subscribe(address string) bool {
 	if err := s.kvstate.Put(address, [][]byte{}); err != nil {
 		fmt.Printf("error subscribing address: %v", err)
@@ -34,6 +37,7 @@ func (s *Service) Subscribe(address string) bool {
 	return true
 }
 
+// GetTransactions return a list of scanned transactions for the given address.
 func (s *Service) GetTransactions(address string) []svc.Transaction {
 	txs, err := s.kvstate.Get(address)
 	if err != nil {
