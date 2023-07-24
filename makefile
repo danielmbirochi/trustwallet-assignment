@@ -7,6 +7,9 @@ build:
 run: build
 	./txparser
 
+test:
+	go test ./...
+
 test-db:
 	go test -v ./internal/state/inmemorydb/inmemorydb_test.go
 
