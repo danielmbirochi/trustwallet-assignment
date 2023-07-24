@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	svc "github.com/danielmbirochi/trustwallet-assignment/internal/service"
+	svc "github.com/danielmbirochi/trustwallet-assignment/internal"
 	"github.com/danielmbirochi/trustwallet-assignment/internal/txparser"
 	"github.com/danielmbirochi/trustwallet-assignment/pkg/ethclient"
 )

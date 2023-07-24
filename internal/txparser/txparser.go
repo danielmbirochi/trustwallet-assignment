@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	svc "github.com/danielmbirochi/trustwallet-assignment/internal/service"
+	svc "github.com/danielmbirochi/trustwallet-assignment/internal"
 	"github.com/danielmbirochi/trustwallet-assignment/internal/state"
 	db "github.com/danielmbirochi/trustwallet-assignment/internal/state/inmemorydb"
 	"github.com/danielmbirochi/trustwallet-assignment/pkg/ethclient"

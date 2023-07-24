@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	svc "github.com/danielmbirochi/trustwallet-assignment/internal/core"
+	svc "github.com/danielmbirochi/trustwallet-assignment/internal"
 	"github.com/danielmbirochi/trustwallet-assignment/internal/state"
 	"github.com/danielmbirochi/trustwallet-assignment/pkg/ethclient"
 )
