@@ -62,6 +62,15 @@ func (db *Database) Put(key string, value [][]byte) error {
 	if db.db == nil {
 		return ErrInMemoryDBNotFound
 	}
+
+	exist, err := db.Has(key)
+	if err != nil {
+		return err
+	}
+	if exist {
+		return nil
+	}
+
 	db.db[key] = append(db.db[key], value...)
 	return nil
 }
