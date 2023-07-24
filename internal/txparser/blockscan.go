@@ -55,7 +55,7 @@ func (b *Blockscan) StartScan(interval time.Duration) bool {
 			select {
 			case <-b.ctx.Done():
 				ticker.Stop()
-				fmt.Println("Stopping blockscan")
+				fmt.Println("stopping blockscan")
 				return
 			case <-ticker.C:
 				ticker.Stop()
@@ -66,7 +66,7 @@ func (b *Blockscan) StartScan(interval time.Duration) bool {
 					}
 				}
 				ticker.Reset(interval)
-				fmt.Printf("Scanned block %d\n", b.GetCurrentBlock())
+				fmt.Printf("scanned block %d\n", b.GetCurrentBlock())
 			}
 		}
 	}()
